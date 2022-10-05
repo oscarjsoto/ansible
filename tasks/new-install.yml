@@ -1,0 +1,61 @@
+- name: Create a login user
+  user:
+    name: '{{ username }}'
+    password: '{{ password }}'
+    groups: sudo
+    append: yes
+    shell: /bin/bash
+
+- name: Ensure .ssh directory exists.
+  file:
+    path: '/home/{{ username }}/.ssh'
+    owner: '{{ username }}'
+    group: '{{ username }}'
+    mode: 0700
+    state: directory
+
+- name: Install ssh key
+  copy:
+    src: '.ssh/id_ed25519'
+    dest: '/home/{{ username }}/.ssh/id_ed25519'
+    owner: '{{ username }}'
+    group: '{{ username }}'
+    mode: 0600
+
+- name: Add identity key to authorized keys on host
+  authorized_key:
+    user: '{{ user }}'
+    key: "{{ lookup('file', ssh_public_key) }}"
+  register: add_identity_key
+  when: ssh_public_key is defined and user is defined
+
+- name: Disable empty password login
+  lineinfile:
+    dest: '{{ sshd_config }}'
+    regexp: '^#?PermitEmptyPasswords'
+    line: 'PermitEmptyPasswords no'
+  notify: restart sshd
+
+- name: Disable remote root login
+  lineinfile:
+    dest: '{{ sshd_config }}'
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+  notify: restart sshd
+
+- name: Disable password login
+  lineinfile:
+    dest: '{{ sshd_config }}'
+    regexp: '^(#\s*)?PasswordAuthentication '
+    line: 'PasswordAuthentication no'
+  when:
+    - add_identity_key is succeeded
+    - not add_identity_key is skipped
+  notify: restart sshd
+
+- name: Enable PAM
+  lineinfile:
+    dest: '{{ sshd_config }}'
+    regexp: '^#?UsePAM'
+    line: 'UsePAM yes'
+  notify: restart sshd

@@ -1,0 +1,29 @@
+- hosts: localhost
+  vars:
+    dest_key: '.ssh/id_ed25519'
+    ssh_public_key: '.ssh/id_ed25519'
+    sshd_config: '/etc/ssh/sshd_config'
+  vars_files:
+    - vars.yml
+  pre_tasks:
+    - name: Update Apt
+      become: true
+      apt:
+        upgrade: true
+        update_cache: true
+        cache_valid_time: 86400 #One day
+        state: present
+      tags:
+        - install
+        - core
+  tasks:
+    - include: tasks/new-install.yml
+    # - include: tasks/user-login.yml
+    # - include: tasks/git-setup.yml
+    # - include: tasks/node-setup.yml
+    # - include: tasks/npm-packages.yml
+  handlers:
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted

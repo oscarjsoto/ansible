@@ -1,0 +1,32 @@
+- name: Create a login user
+  user:
+    name: '{{ create_username }}'
+    password: '{{ create_password }}'
+    state: present
+    groups: sudo
+    append: true
+    create_home: true
+    shell: /bin/bash
+  tags:
+    - login
+
+- name: Disable Sudo Passwd
+  lineinfile:
+    path: /etc/sudoers
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL:ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+  tags:
+    - login
+
+- name: Disable Root Login
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+    backup: yes
+  notify:
+    - restart ssh
+  tags:
+    - login

@@ -24,7 +24,7 @@
 
 - name: Add identity key to authorized keys on host
   authorized_key:
-    user: '{{ user }}'
+    user: '{{ username }}'
     key: "{{ lookup('file', ssh_public_key) }}"
   register: add_identity_key
   when: ssh_public_key is defined and user is defined

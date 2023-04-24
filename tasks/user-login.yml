@@ -1,7 +1,7 @@
 - name: Create a login user
   user:
-    name: '{{ create_username }}'
-    password: '{{ create_password }}'
+    name: '{{ username }}'
+    password: '{{ password }}'
     state: present
     groups: sudo
     append: true

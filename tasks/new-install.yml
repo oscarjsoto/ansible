@@ -27,7 +27,7 @@
     user: '{{ username }}'
     key: "{{ lookup('file', ssh_public_key) }}"
   register: add_identity_key
-  when: ssh_public_key is defined and user is defined
+  when: ssh_public_key is defined and username is defined
 
 - name: Disable empty password login
   lineinfile:
